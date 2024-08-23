@@ -1,5 +1,11 @@
 # Changelog
 
+# 1.0.2 (23 August 2024)
+
+## Patch Release
+
+* Ensure that we delete `createrepo.json` if it is successfully created
+
 # 1.0.1 (23 August 2024)
 
 ## Patch Release
