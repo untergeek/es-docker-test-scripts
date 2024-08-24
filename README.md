@@ -1,5 +1,8 @@
 # es-docker-test-scripts
-Bash scripts to automate creation/destruction of Elasticsearch Docker containers for testing
+Bash scripts to automate creation/destruction of Elasticsearch Docker containers
+for testing.  Also included is a simple `env_var.yaml` that makes it easy to use
+[`es_client`'s](https://es-client.readthedocs.io/) [`Builder`
+class](https://es-client.readthedocs.io/en/latest/api.html#builder-class).
 
 The `docker_test/create.sh` script will:
 
@@ -15,7 +18,9 @@ The `docker_test/create.sh` script will:
     * The Docker container mount point (`${REPODOCKER}`) is `/media`
     * The local path is `${SCRIPTPATH}/repo`, which would usually be
       `${PROJECT_ROOT}/docker_test`
-  * Export values to `${PROJECT_ROOT}/.env` for use in testing.
+  * Export environment variables and values to `${PROJECT_ROOT}/.env` for use
+    in testing. You must `source ${PROJECT_ROOT}/.env` for these to be available
+    in your shell environment.
   * Tell you that you're ready for testing
 
 The `docker_test/destroy.sh` script will:
@@ -114,6 +119,63 @@ export TEST_USER=elastic
 export ESCLIENT_PASSWORD="REDACTED"
 export TEST_PASS="REDACTED"
 ```
+
+### Contents of `docker_test/env_var.yaml`
+
+This is a boilerplate YAML configuration file which will work with
+[`es_client`'s](https://es-client.readthedocs.io/) [`Builder`
+class](https://es-client.readthedocs.io/en/latest/api.html#builder-class), once
+the `.env` file has been sourced and the values assigned.
+
+  * `env_var.yaml`:
+    
+    ```
+    ---
+    elasticsearch:
+      client:
+        hosts: ${ESCLIENT_HOSTS}
+        ca_certs: ${ESCLIENT_CA_CERTS}
+      other_settings:
+        username: ${ESCLIENT_USERNAME}
+        password: ${ESCLIENT_PASSWORD}
+    ```
+  
+  * Example Flow:
+
+    ```
+    $ cd ${PROJECT_ROOT}
+    $ docker_test/create.sh 8.15.0
+    ### Output of create.sh here ###
+    $ source .env
+    $ env | grep ESCLIENT
+    ESCLIENT_CA_CERTS=/path/to/http_ca.crt
+    ESCLIENT_HOSTS=https://127.0.0.1:9200
+    ESCLIENT_USERNAME=elastic
+    ESCLIENT_PASSWORD=REDACTED
+    $ python
+    >>> import json
+    >>> from es_client import Builder
+    >>> _ = Builder(configfile='docker_test/env_var.yaml', autoconnect=True)
+    >>> client = _.client
+    >>> print(json.dumps(dict(client.info()), indent=2))
+    {
+      "name": "local-node",
+      "cluster_name": "local-cluster",
+      "cluster_uuid": "snJUMp3TQUWsi86EEWrU4w",
+      "version": {
+        "number": "8.15.0",
+        "build_flavor": "default",
+        "build_type": "docker",
+        "build_hash": "1a77947f34deddb41af25e6f0ddb8e830159c179",
+        "build_date": "2024-08-05T10:05:34.233336849Z",
+        "build_snapshot": false,
+        "lucene_version": "9.11.1",
+        "minimum_wire_compatibility_version": "7.17.0",
+        "minimum_index_compatibility_version": "7.0.0"
+      },
+      "tagline": "You Know, for Search"
+    }
+    ```
 
 ### Version required
 
