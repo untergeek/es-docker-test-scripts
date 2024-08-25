@@ -42,6 +42,7 @@ docker run -q -d -it --name ${NAME} --network ${NAME}-net -m ${MEMORY} \
   -e "cluster.name=local-cluster" \
   -e "node.name=local-node" \
   -e "xpack.monitoring.templates.enabled=false" \
+  -e "xpack.searchable.snapshot.shared_cache.size=50M" \
   -e "path.repo=${REPODOCKER}" \
 ${IMAGE}:${VERSION}
 
