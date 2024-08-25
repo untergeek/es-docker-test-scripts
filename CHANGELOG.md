@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.1.1 (24 August 2024)
+
+### Patch Release
+
+* Add `xpack.searchable.snapshot.shared_cache.size=50M"` to `create.sh`
+  * After discovering unassigned shards in my frozen index testing, I
+    discovered that `client.cluster.allocation_explain()` revealed the
+    problem: 
+    
+    ```
+    'allocate_explanation': "Elasticsearch isn't allowed to allocate this shard to any of the nodes in the cluster.
+    ```
+
+    A bit farther in, I saw:
+
+    ```
+    'explanation': 'node setting [xpack.searchable.snapshot.shared_cache.size]
+    is set to zero, so shards of partially mounted indices cannot be
+    allocated to this node'}]
+    ```
+
+    The solution became apparent after that.
+
 ## 1.1.0 (24 August 2024)
 
 ### Feature Release
