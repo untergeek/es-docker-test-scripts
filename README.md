@@ -7,8 +7,9 @@ class](https://es-client.readthedocs.io/en/latest/api.html#builder-class).
 The `docker_test/create.sh` script will:
 
   * Create a named Docker network for the container
-  * Start up an Elasticsearch container running the specified version
-  * Reset the password with a randomly generated one and capture it
+  * Start one or more Elasticsearch containers running the specified version
+  * Capture the generated password
+  * Capture the generated node enrollment token
   * Copy the generated `http_ca.crt` file from the Docker container to
     `${PROJECT_ROOT}/http_ca.crt`
   * Create a `curl` config file for easier testing
@@ -35,9 +36,11 @@ The `docker_test/destroy.sh` script will:
   
 Environment variables used to create an Elasticsearch instance:
 
-  * `-e "discovery.type=single-node"`
-  * `-e "cluster.name=local-cluster"`
-  * `-e "node.name=local-node"`
+  * `-e "discovery.type=${DISCOVERY_TYPE}"`
+  * `-e "cluster.name=${CLUSTER_NAME}"`
+  * `-e "node.name=node-${VALUE}"`
+  * `-e "node.roles=[${ROLES}]"`
+  * `-e "xpack.searchable.snapshot.shared_cache.size=100MB"`
   * `-e "xpack.monitoring.templates.enabled=false"`
   * `-e "path.repo=${REPODOCKER}"`
 
@@ -83,19 +86,20 @@ and is used here to show what will be rendered in real-world use.
 cd ${PROJECT_ROOT}
 docker_test/create.sh X.Y.Z
 
-Starting container "${PROJECT_NAME}-test" from docker.elastic.co/elasticsearch/elasticsearch:X.Y.Z
-Container ID: 78267407e511e5309db45840a1e9f41cf993d2e4f0340fb85566392ab2658d7e
+Using Elasticsearch version 8.15.0
 
-Getting Elasticsearch credentials from container "${PROJECT_NAME}-test"...
+Creating 1 node(s)...
 
-- 22s elapsed (typically 15s - 25s)...Credentials captured!
+Starting node 1...
+Container ID: 70fcb95126adeac9bb1d91db148e20b8b82b7797ce1246246a1915de81a0fd25
+Getting Elasticsearch credentials from container ${PROJECT_NAME}-test-0...
+| 17s elapsed (typically 15s - 25s)...
+Trial license started...
+Snapshot repository initialized...
 
-HTTP status code for ${PROJECT_NAME}-test instance is: 200 --- ${PROJECT_NAME}-test instance is ready!
+Node 1 started.
 
-Trial license started and acknowledged. Snapshot repository "testing" created.
-
-${PROJECT_NAME}-test container is up using image elasticsearch:X.Y.Z
-Ready to test!
+All nodes ready to test!
 
 $PWD is ${PROJECT_ROOT}
 Environment variables are in .env
@@ -188,7 +192,37 @@ docker_test/create.sh
 
 Error! No Elasticsearch version provided.
 VERSION must be in Semver format, e.g. X.Y.Z, 8.6.0
-USAGE: docker_test/create.sh VERSION
+USAGE: ./create.sh VERSION [SCENARIO]
+```
+
+### Scenario [OPTIONAL]
+
+A second command-line option may be specified in the form of a scenario name,
+which is a way to prepare one or more extra nodes with specified settings.
+
+```
+cd ${PROJECT_ROOT}
+docker_test/create.sh X.Y.Z SCENARIO
+
+Using scenario: SCENARIO
+Using Elasticsearch version X.Y.Z
+
+Creating 2 node(s)...
+
+Starting node 1...
+Container ID: 2b995646f72ca338e619c69376a888fef8a3706862318b44799908090ec722ac
+Getting Elasticsearch credentials from container ${PROJECT_NAME}-test-0...
+- 18s elapsed (typically 15s - 25s)...
+Trial license started...
+Snapshot repository initialized...
+
+Node 1 started.
+Node 2 started.
+
+All nodes ready to test!
+
+$PWD is ${PROJECT_ROOT}
+Environment variables are in .env
 ```
 
 ## `destroy.sh` Execution Flow
@@ -200,10 +234,8 @@ and is used here to show what will be rendered in real-world use.
 cd ${PROJECT_ROOT}
 docker_test/destroy.sh
 
-Stopping container ${PROJECT_NAME}-test...
-${PROJECT_NAME}-test stopped.
-Removing container ${PROJECT_NAME}-test...
-${PROJECT_NAME}-test deleted.
+Stopping all containers...
+Removing all containers...
 Deleting remaining files and directories
 Cleanup complete.
 ```
