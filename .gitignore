@@ -1,0 +1,4 @@
+.env
+docker_test/.kurl
+docker_test/repo
+http_ca.crt
